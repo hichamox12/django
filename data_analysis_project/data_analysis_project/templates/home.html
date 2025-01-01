@@ -1,97 +1,84 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Data Analysis and Visualization</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f8f9fa;
-            padding: 20px;
-        }
-        .container {
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-        }
-        h1, h2, h3, h4 {
-            color: #343a40;
-        }
-        .btn-primary, .btn-secondary {
-            margin-top: 10px;
-        }
-        .table {
-            margin-top: 15px;
-        }
-        .chart-container {
-            text-align: center;
-            margin-top: 20px;
-        }
-        .section {
-            margin-top: 30px;
-            padding: 15px;
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
-            background: #f8f9fa;
-            
-        }
-    </style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
-    <div class="container">
-        <h1 class="text-center">Data Analysis and Visualization</h1>
+<body class="bg-light">
+
+    <!-- Main Container -->
+    <div class="container mt-5 p-4 bg-white shadow rounded">
+
+        <h1 class="text-center display-5 text-primary mb-4">Data Analysis and Visualization</h1>
+
+        <!-- Error Display -->
+        {% if error %}
+        <div class="alert alert-danger" role="alert">
+            <strong>Error:</strong> {{ error }}
+        </div>
+        {% endif %}
 
         <!-- File Upload Section -->
-        <div class="section">
-            <h3>Step 1: Upload Your Data</h3>
+        <div class="border p-4 mb-4 bg-light rounded shadow-sm">
+            <h3 class="h5 text-dark mb-3">Step 1: Upload Your Data</h3>
             <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
                 <input type="hidden" name="file_upload" value="true">
-                <label for="file" class="form-label">Upload Excel File:</label>
-                <input type="file" name="file" class="form-control mb-2" required>
+                <div class="mb-3">
+                    <label for="file" class="form-label">Upload Excel File</label>
+                    <input type="file" name="file" class="form-control" required>
+                </div>
                 <button type="submit" class="btn btn-primary">Upload</button>
             </form>
         </div>
 
         {% if data_preview %}
-            <!-- Data Preview Section -->
-            <div class="section">
-                <h3>Step 2: Data Preview</h3>
+        <!-- Data Preview Section -->
+        <div class="border p-4 mb-4 bg-light rounded shadow-sm">
+            <h3 class="h5 text-dark mb-3">Step 2: Data Preview</h3>
+            <div class="table-responsive">
                 {{ data_preview|safe }}
             </div>
+        </div>
         {% endif %}
 
         {% if numeric_cols %}
-            <!-- Statistics and Visualization Section -->
-            <div class="section">
-                <h3>Step 3: Perform Analysis</h3>
+        <!-- Statistics and Visualization Section -->
+        <div class="border p-4 mb-4 bg-light rounded shadow-sm">
+            <h3 class="h5 text-dark mb-3">Step 3: Perform Analysis</h3>
 
-                <!-- Statistics Form -->
-                <form method="post">
-                    {% csrf_token %}
-                    <input type="hidden" name="calculate_stats" value="true">
-                    <label for="selected_column" class="form-label">Select Numeric Column:</label>
-                    <select name="selected_column" class="form-select mb-3">
+            <!-- Statistics Form -->
+            <form method="post" class="mb-4">
+                {% csrf_token %}
+                <input type="hidden" name="calculate_stats" value="true">
+                <div class="mb-3">
+                    <label for="selected_column" class="form-label">Select Numeric Column</label>
+                    <select name="selected_column" class="form-select">
                         {% for col in numeric_cols %}
-                            <option value="{{ col }}">{{ col }}</option>
+                        <option value="{{ col }}">{{ col }}</option>
                         {% endfor %}
                     </select>
-                    <button type="submit" class="btn btn-secondary">Calculate Statistics</button>
-                </form>
+                </div>
+                <button type="submit" class="btn btn-secondary">Calculate Statistics</button>
+            </form>
 
-                <!-- Visualization Form -->
-                <form method="post">
-                    {% csrf_token %}
-                    <input type="hidden" name="generate_visualization" value="true">
-                    <label for="selected_column" class="form-label">Select Numeric Column for Y-axis:</label>
-                    <select name="selected_column" class="form-select mb-3">
+            <!-- Visualization Form -->
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="generate_visualization" value="true">
+                <div class="mb-3">
+                    <label for="selected_column" class="form-label">Select Numeric Column for Y-axis</label>
+                    <select name="selected_column" class="form-select">
                         {% for col in numeric_cols %}
-                            <option value="{{ col }}">{{ col }}</option>
+                        <option value="{{ col }}">{{ col }}</option>
                         {% endfor %}
                     </select>
-                    <label for="visualization_type" class="form-label">Select Visualization Type:</label>
-                    <select name="visualization_type" class="form-select mb-3">
+                </div>
+                <div class="mb-3">
+                    <label for="visualization_type" class="form-label">Select Visualization Type</label>
+                    <select name="visualization_type" class="form-select">
                         <option value="Line Plot">Line Plot</option>
                         <option value="Box Plot">Box Plot</option>
                         <option value="Histogram">Histogram</option>
@@ -99,53 +86,158 @@
                         <option value="Violin Plot">Violin Plot</option>
                         <option value="Scatter Plot">Scatter Plot</option>
                     </select>
-                    <div id="scatter-column-section" style="display: none;">
-                        <label for="scatter_column" class="form-label">Select Numeric Column for X-axis (Scatter Plot):</label>
-                        <select name="scatter_column" class="form-select">
-                            {% for col in numeric_cols %}
-                                <option value="{{ col }}">{{ col }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Generate Visualization</button>
-                </form>
-                
-                <script>
-                    // JavaScript to toggle Scatter Plot column selection
-                    document.addEventListener("DOMContentLoaded", function () {
-                        const visualizationTypeSelect = document.querySelector("select[name='visualization_type']");
-                        const scatterColumnSection = document.getElementById("scatter-column-section");
-                        visualizationTypeSelect.addEventListener("change", function () {
-                            scatterColumnSection.style.display = this.value === "Scatter Plot" ? "block" : "none";
-                        });
-                    });
-                </script>
+                </div>
+                <div id="scatter-column-section" class="mb-3 d-none">
+                    <label for="scatter_column" class="form-label">Select Numeric Column for X-axis (Scatter Plot)</label>
+                    <select name="scatter_column" class="form-select">
+                        {% for col in numeric_cols %}
+                        <option value="{{ col }}">{{ col }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Generate Visualization</button>
+            </form>
+        </div>
         {% endif %}
 
         {% if stats %}
-            <!-- Statistics Display -->
-            <div class="section">
-                <h3>Statistics</h3>
-                <ul>
-                    {% for key, value in stats.items %}
-                        <li><strong>{{ key }}:</strong> {{ value }}</li>
-                    {% endfor %}
-                </ul>
+        <!-- Statistics Display -->
+        <div class="border p-4 mb-4 bg-light rounded shadow-sm">
+            <h3 class="h5 text-dark mb-3">Statistics</h3>
+            <div class="row row-cols-1 row-cols-md-2 g-3">
+                {% for key, value in stats.items %}
+                <div class="col">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <strong>{{ key }}:</strong> {{ value }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
             </div>
+        </div>
         {% endif %}
 
-        {% if chart %}
-            <!-- Visualization Display -->
-            <div class="chart-container">
-                <h3>Visualization</h3>
-                <img src="data:image/png;base64,{{ chart }}" alt="Chart" class="img-fluid">
-            </div>
+        {% if visualization_chart %}
+        <!-- Visualization Display -->
+        <div class="text-center mb-4">
+            <h3 class="h5 text-dark mb-3">Visualization</h3>
+            <img src="data:image/png;base64,{{ visualization_chart }}" alt="Chart" class="img-fluid rounded shadow">
+        </div>
         {% endif %}
 
-      
+        <!-- Probability Distribution Section -->
+        <div class="border p-4 mb-4 bg-light rounded shadow-sm">
+            <h3 class="h5 text-dark mb-3">Step 4: Generate Probability Distribution</h3>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="generate_distribution" value="true">
+                <div class="mb-3">
+                    <label for="column" class="form-label">Select Numeric Column</label>
+                    <select name="column" class="form-select">
+                        {% for col in numeric_cols %}
+                        <option value="{{ col }}">{{ col }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="distribution_type" class="form-label">Select Distribution Type</label>
+                    <select name="distribution_type" class="form-select">
+                        <option value="bernoulli">Bernoulli</option>
+                        <option value="binomial">Binomial</option>
+                        <option value="poisson">Poisson</option>
+                        <option value="uniform">Uniform</option>
+                        <option value="exponential">Exponential</option>
+                        <option value="normal">Normal</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="n" class="form-label">n (for Binomial)</label>
+                    <input type="number" step="1" name="n" class="form-control" value="10">
+                </div>
+                <div class="mb-3">
+                    <label for="p" class="form-label">p (for Binomial/Bernoulli)</label>
+                    <input type="number" step="0.01" name="p" class="form-control" value="0.5">
+                </div>
+                <div class="mb-3">
+                    <label for="lambda" class="form-label">Lambda (for Poisson/Exponential)</label>
+                    <input type="number" step="0.01" name="lambda" class="form-control" value="1.0">
+                </div>
+                <div class="mb-3">
+                    <label for="a" class="form-label">a (for Uniform)</label>
+                    <input type="number" step="0.01" name="a" class="form-control" value="0">
+                </div>
+                <div class="mb-3">
+                    <label for="b" class="form-label">b (for Uniform)</label>
+                    <input type="number" step="0.01" name="b" class="form-control" value="1">
+                </div>
+                <button type="submit" class="btn btn-success">Generate Distribution</button>
+            </form>
+        </div>
 
-        <!-- Contingency Table Section -->
-        
+        {% if distribution_chart %}
+        <!-- Probability Distribution Display -->
+        <div class="text-center mb-4">
+            <h3 class="h5 text-dark mb-3">Generated Probability Distribution</h3>
+            <img src="data:image/png;base64,{{ distribution_chart }}" alt="Distribution Chart" class="img-fluid rounded shadow">
+        </div>
+        {% endif %}
+
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Dynamic Parameter Visibility for Probability Distributions
+            const distributionType = document.querySelector('[name="distribution_type"]');
+            const fields = {
+                'n': document.querySelector('[name="n"]').parentElement,
+                'p': document.querySelector('[name="p"]').parentElement,
+                'lambda': document.querySelector('[name="lambda"]').parentElement,
+                'a': document.querySelector('[name="a"]').parentElement,
+                'b': document.querySelector('[name="b"]').parentElement,
+            };
+
+            distributionType.addEventListener('change', function () {
+                // Hide all fields initially
+                Object.values(fields).forEach(field => field.style.display = 'none');
+
+                // Show fields based on selected distribution
+                switch (this.value) {
+                    case 'binomial':
+                        fields['n'].style.display = 'block';
+                        fields['p'].style.display = 'block';
+                        break;
+                    case 'bernoulli':
+                        fields['p'].style.display = 'block';
+                        break;
+                    case 'poisson':
+                        fields['lambda'].style.display = 'block';
+                        break;
+                    case 'exponential':
+                        fields['lambda'].style.display = 'block';
+                        break;
+                    case 'uniform':
+                        fields['a'].style.display = 'block';
+                        fields['b'].style.display = 'block';
+                        break;
+                }
+            });
+            distributionType.dispatchEvent(new Event('change'));
+
+            // Scatter Plot Column Visibility
+            const visualizationType = document.querySelector('[name="visualization_type"]');
+            const scatterColumnSection = document.getElementById('scatter-column-section');
+
+            visualizationType.addEventListener('change', function () {
+                if (this.value === "Scatter Plot") {
+                    scatterColumnSection.classList.remove('d-none');
+                } else {
+                    scatterColumnSection.classList.add('d-none');
+                }
+            });
+            visualizationType.dispatchEvent(new Event('change'));
+        });
+    </script>
 </body>
 </html>

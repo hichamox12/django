@@ -2,6 +2,8 @@ from django.shortcuts import render
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+from scipy.stats import bernoulli, binom, uniform, poisson, expon, norm
+import numpy as np
 from io import BytesIO
 import base64
 
@@ -77,11 +79,63 @@ def home_view(request):
                 buffer = BytesIO()
                 plt.savefig(buffer, format='png')
                 buffer.seek(0)
-                context['chart'] = base64.b64encode(buffer.read()).decode('utf-8')
+                context['visualization_chart'] = base64.b64encode(buffer.read()).decode('utf-8')  # Modifié ici
                 buffer.close()
                 plt.close(fig)
             except Exception as e:
                 context['error'] = f"Error generating visualization: {str(e)}"
+        else:
+            context['error'] = "No data available. Please upload a file first."
+
+    # Handle Probability Distributions
+    if request.method == 'POST' and 'generate_distribution' in request.POST:
+        if df is not None:
+            try:
+                column = request.POST.get('column', None)
+                distribution_type = request.POST.get('distribution_type', '')
+                params = {
+                    'n': int(request.POST.get('n', 10)),
+                    'p': float(request.POST.get('p', 0.5)),
+                    'lambda': float(request.POST.get('lambda', 1.0)),
+                    'a': float(request.POST.get('a', 0)),
+                    'b': float(request.POST.get('b', 1))
+                }
+
+                if column and column in df.select_dtypes(include=['number']).columns:
+                    data = df[column].dropna()
+
+                    x = np.linspace(data.min(), data.max(), 500)
+
+                    fig, ax = plt.subplots(figsize=(10, 6))
+                    if distribution_type == "bernoulli":
+                        rv = bernoulli(params['p'])
+                        ax.bar([0, 1], rv.pmf([0, 1]), color='skyblue')
+                    elif distribution_type == "binomial":
+                        rv = binom(params['n'], params['p'])
+                        ax.bar(range(params['n'] + 1), rv.pmf(range(params['n'] + 1)), color='skyblue')
+                    elif distribution_type == "poisson":
+                        rv = poisson(params['lambda'])
+                        ax.bar(range(20), rv.pmf(range(20)), color='skyblue')
+                    elif distribution_type == "uniform":
+                        ax.plot(x, uniform.pdf(x, loc=params['a'], scale=params['b'] - params['a']), color='green')
+                    elif distribution_type == "exponential":
+                        ax.plot(x, expon.pdf(x, scale=1 / params['lambda']), color='orange')
+                    elif distribution_type == "normal":
+                        ax.plot(x, norm.pdf(x, loc=data.mean(), scale=data.std()), color='purple')
+
+                    ax.set_title(f"Distribution: {distribution_type.capitalize()} for {column}")
+                    ax.grid(True)
+
+                    buffer = BytesIO()
+                    plt.savefig(buffer, format="png")
+                    buffer.seek(0)
+                    context['distribution_chart'] = base64.b64encode(buffer.read()).decode('utf-8')  # Modifié ici
+                    buffer.close()
+                    plt.close(fig)
+                else:
+                    context['error'] = "Please select a valid numeric column."
+            except Exception as e:
+                context['error'] = f"Error generating distribution: {str(e)}"
         else:
             context['error'] = "No data available. Please upload a file first."
 
